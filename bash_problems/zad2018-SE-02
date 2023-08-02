@@ -1,0 +1,60 @@
+#!/bin/bash
+
+if ! [ $# -eq 2 ]
+then
+	echo "Wrong usage of the script! Correct usage: $0 <filename> <directory>"
+	exit 1
+fi
+
+if ! [ -e $1 ]
+then
+	echo "First argument must exist!"
+	exit 1
+fi
+
+if ! [ -f $1 ]
+then
+	echo "First argument must be a regular file!"
+	exit 1
+fi
+
+if ! [ -e $2 ]
+then
+	echo "Second argument must exist!"
+	exit 1
+fi
+
+if ! [ -d $2 ]
+then
+	echo "Second argument must be a directory!"
+	exit 1
+fi
+
+old_IFS=$IFS
+IFS=$'\n'
+namesRegex="^[a-zA-Z\-]+ [a-zA-Z\-]+"
+allNames=$(cat $1 | cut -d':' -f1)
+count=0
+declare -A uniqNames
+
+for name in $allNames
+do
+	uniqNames[$(echo $name | egrep -o "$namesRegex")]=1
+done
+
+for uniqName in "${!uniqNames[@]}"
+do
+	echo "$uniqName;$count" >> "$2/dict.txt"
+	
+	touch "$2/$count.txt"
+	
+	for line in $(cat $1 | egrep "^$uniqName.*")
+	do
+		echo $(echo $line | cut -d':' -f2) >> "$2/$count.txt"
+	done
+
+	count=$(($count+1))
+done
+
+#	echo "${uniqNames[$uniqName]};$uniqName" >> "$2/dict.txt"
+

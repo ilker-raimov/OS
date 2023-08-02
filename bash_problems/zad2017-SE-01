@@ -1,0 +1,38 @@
+#!/bin/bash
+
+if [ $# -gt 2 ] || [ $# -lt 1 ]
+then
+ 	echo "Wrong script usage. Correct use: $0 <directory> <number>"
+ 	exit 1
+fi
+
+if ! [ -d $1 ]
+then
+	echo "First argument is not an directory"
+	exit 1
+fi
+
+numRegex="^[0-9]+$"
+
+if [ $# -eq 2 ]
+then
+	if ! [[ $2 =~ $numRegex ]]
+	then
+		echo "Second argument is not a number!"
+		exit 1
+	fi
+
+	foundFiles=$(find $1 -type f -links +$(($2-1)))
+	
+	for file in ${foundFiles[@]}
+	do
+		echo $file
+	done
+else
+	foundSymlinks=$(find $1 -type l ! -exec test -e {} \; -printf "$1/%P\n" 2> /dev/null)
+
+	for symlink in ${foundSymlinks[@]}
+	do
+		echo $symlink
+	done
+fi

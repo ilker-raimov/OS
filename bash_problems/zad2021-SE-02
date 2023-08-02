@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# FQDN in lower digit and ., ne moje da zapozhwa w .,  ne moje da ima sysedni tochki i zawyrshwa na .
+
+if [ $# -eq 0 ]
+then
+	echo "Correct usage: $0 <file_1> ... <file_n>"
+	exit 1
+fi
+
+count=0
+numRegex="^[0-9]+$"
+regexyt="^([a-z0-9]+\.)+$"
+IFS=$' '
+
+for file in "$@"
+do
+	lines=$(cat $file)
+
+	for line in "${lines[@]}"
+	do
+		nocomment=$(echo $line | cut -d';' -f1 | sed 's/\t//g' | tr -s ' ')
+		echo $( echo $nocomment | cut -d' ' -f1)
+
+		if ! [[ "$(echo $nocomment | cut -d' ' -f1)" =~ "$regexyt" ]]
+		then
+			echo "File $file is not in correct format >amper2"
+			continue
+		fi
+
+		if ! [[ "$(echo $nocomment | cut -d' ' -f2)" =~ "$numRegex" ]]
+		then
+			startIndex=2
+		else
+			startIndex=3
+		fi
+
+		if [ "$(echo $nocomment | cut -d' ' -f$startIndex)" != "IN" ]
+		then
+			echo "File $file is not in correct format"
+		fi
+
+		startIndex=$(($startIndex+1))
+		nextEl=$(echo $nocomment | cut -d' ' -f$startIndex)
+
+		if [ "$nextEl" != "SOA" ] || [ "$nextEl" != "NS" ] || [ "$nextEl" != "A" ] || [ "$nextEl" != "AAAA" ]
+		then
+			echo "File $file is not in correct format"
+		fi
+
+		startIndex=$(($startIndex+1))
+		nextEl=$(echo $nocomment | cut -d' ' -f$startIndex)
+
+		if ! [[ "$nextEl" =~ "$regexyt" ]]
+		then
+			echo "Wrong $file"
+		fi
+
+		startIndex=$(($startIndex+1))
+		nextEl=$(echo $nocomment | cut -d' ' -f$startIndex)
+
+		if ! [[ "$nextEl" =~ "$regexyt" ]]
+		then
+			echo "Wrong $file"
+		fi
+
+		startIndex=$(($startIndex+1))
+		nextEl=$(echo $nocomment | cut -d' ' -f$startIndex)
+
+		if [ "$nextEl" != ")" ] 
+		then
+			echo ""
+		else
+			echo ""
+		fi
+
+
+
+		if [ $count -eq 0 ]
+		then
+			IN=$(echo $nocomment | cut -d' ' -f3)
+			break
+		fi 
+	done
+done
+
+

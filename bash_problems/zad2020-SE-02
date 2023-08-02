@@ -1,0 +1,12 @@
+#!/bib/bash
+
+if ! test -f "spacex.txt"; then
+	echo "Spaces.txt does not exist"
+	exit 1
+fi
+
+topByFailures=$(cat spacex.txt | tail -n +2 | egrep "[0-9]{10}\|[a-zA-Z]{1,6}\|Failure\|.*" | cut -d'|' -f2 | uniq -c | sort -nr | head -n +1 | awk '{print $2}')
+allSuchSites=$(cat spacex.txt | tail -n +2 | egrep "[0-9]{10}\|${topByFailures}\|.*" | sort -t'|' -nr -k1 | head -n +1 | cut -d'|' -f3,4)
+
+echo ${allSuchSites}
+

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+usersAndHomeDirs=$(cat /etc/passwd | cut -d':' -f1,6)
+declare -A mostRecentFiles
+
+for userAndHomeDir in ${usersAndHomeDirs[@]}
+do
+	user=$(echo $userAndHomeDir | cut -d':' -f1)
+	homeDir=$(echo $userAndHomeDir | cut -d':' -f2)
+    mostRecentFiles[$user]=$(find $homeDir -type f -printf "%T@\n" 2> /dev/null | sort -nr | head -n +1)
+done
+
+for user in "${!mostRecentFiles[@]}"
+do
+	if ! [ -z "${mostRecentFiles[$user]}" ]
+	then
+		echo "$user ${mostRecentFiles[$user]}"
+	fi
+done
+
+mostRecentFile=$(echo ${mostRecentFiles[*]} | sort -t' ' -nr -k2 | cut -d' ' -f1)
+
+echo $mostRecentFile

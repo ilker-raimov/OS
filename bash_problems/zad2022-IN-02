@@ -1,0 +1,103 @@
+#!/bin/bash
+
+if ! [ $# -eq 1 ]
+then
+	echo "Wrong usage of the script! Correct usage: $0 <number> - in days"
+	exit 1
+fi
+
+me=$(whoami)
+numRegex="^[0-9]+$"
+
+if ! [[ $1 =~ $numRegex ]]
+then
+	echo "First argument must be an integer - metric value - days"
+fi
+
+# check for name who am i
+
+if ! [ -v ORACLE_BASE ]
+then
+	echo "ORACLE_BASE does not exists bruv!"
+	exit 1
+fi
+
+if ! [ -d $ORACLE_BASE ]
+then
+	echo "ORACLE_BASE value is not a dir"
+fi
+
+if ! [ -v ORACLE_HOME ]
+then
+	echo "ORACLE_HOME does not exist brev".
+	exit 1
+fi
+
+if ! [ -d $ORACLE_BASE ]
+then
+	echo "ORACLE_BASE value is not a dir"
+	exit 1
+fi
+
+if ! [ -d "$ORACLE_BASE/bin" ]
+then
+	echo "There is not subdirectory bin in ORACLE_BASE"
+	exit 1
+fi
+
+if ! [ -e "$ORACLE_BASE/bin/sqlplus" ]
+then
+	echo "sqlplus regular file does not exist in ORACLE_BASE/bin"
+	exit 1
+fi
+
+if ! [ -x "$ORACLE_BASE/bin/sqlplus" ]
+then
+	echo "sqlplus regular file does not exist in ORACLE_BASE/bin"
+	exit 1
+fi
+
+if ! [ -v ORACLE_SID ]
+then
+	echo "ORACLE_SID does not exists brev"
+	exit 1
+fi
+
+if [ $me = "oracle" ]
+then
+	role="SYSDBA"
+else
+	role="SYSASM"
+fi
+
+# result=$(sqlplus -SL "/ as $role" @file.sql)
+
+result=$(echo -e " \nVALUE\n---\n\n" | head -n 4 | tail -n 1)
+
+if [ -z $result ]
+then
+	diag_base=$ORACLE_BASE
+else
+	diag_base=$result
+fi
+
+diag_dir="$diag_base/diag"
+
+if ! [ -e $diag_dir ]
+then
+	echo "Directory $diag_base/diag does not exist"
+	exit 1
+fi
+
+if ! [ -d $diag_dir ]
+then
+	echo "$diag_base/diag is not a dir"
+	exit 1
+fi
+
+if ! [ $me = "grid" ]
+then
+	size_crs=$(find "$diag_dir/crs/$(hostname -s)/trace" -maxdepth 1 -type f \( -name "*_[0-9]*.trc" -o -name "*_[0-9]*.trm" \) -mtime +$1 -printf "%s\n" | awk 'BEGIN {sum=0} {sum+=$1} END {print sum}')
+
+	echo "crs: $size_crs"
+fi

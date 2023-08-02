@@ -1,0 +1,45 @@
+#!/bin/bash
+
+if ! [ $# -eq 1 ]
+then
+	echo "Wrong usage of the script! Correct use: $1 <user>"
+	exit 1
+fi
+
+if [ $EUID -eq 0 ]
+then
+	echo "Must be executed as root"
+	exit 1
+fi
+
+userProcCount=$(ps -U $1 -u $1 -o pid= | wc -l)
+allUsers=$(ps -e -o user= | sort -n | uniq | grep -v "$1")
+
+echo "Users with more active processes than $1:"
+
+for user in ${allUsers[@]}
+do
+	currentUserProcCount=$(ps -U $user -u $user -o pid= | wc -l)
+
+	if [ $currentUserProcCount -gt $userProcCount ]
+	then
+		echo $user
+	fi
+done
+
+avgUptime=$(ps -e -o time= | awk -F ':' '{sum+=3600*$1;sum+=60*$2;sum+=$3;count++} END {print sum/count}')
+doubleAvgUptime=$(echo "$avgUptime * 2" | bc)
+userProcs=$(ps -U $1 -u $1 -o pid=,time=)
+
+echo "Average uptime of all processes is $avgUptime"
+
+for userProc in ${userProcs[@]}
+do
+	currentProcPID=$(echo $userProc | tr -s ' ' | cut -d' ' -f1)
+	currentProcUptime=$(echo $userProc | tr -s ' ' | cut -d' ' -f2 | awk -F ':' '{sum+=3600*$1;sum+=60*$2;sum+=$3;} END {print sum}')
+
+	if (( $(echo "$currentProcUptime > $doubleAvgUptime" | bc -l) ))
+	then
+		echo "Killing process with PID $currentProcPID"
+	fi
+done

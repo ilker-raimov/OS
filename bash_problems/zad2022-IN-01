@@ -1,0 +1,54 @@
+#!/bin/bash
+
+if ! [ $# -eq 2 ]
+then
+	echo "Wrong usage of the script! Correct usage: $0 <dir1> <dir2>"
+	exit 1
+fi
+
+if ! [ -e $1 ] || ! [ -d $1 ]
+then
+	echo "First argument must be a directory that extsts"
+	exit 1
+fi
+
+if ! [ -e $2 ] || ! [ -d $2 ]
+then
+	echo "Second argument must be a directory that extsts"
+	exit 1
+fi
+
+if ! [ $(find $2 -mindepth 1 | wc -l) -eq 0 ]
+then
+	echo "Second directory must be empty!"
+	exit 1
+fi
+
+foundFiles=$(find $1 -type f -printf "%P\n")
+
+for file in ${foundFiles[@]}
+do
+	if [ $(basename $file | egrep "^\..*\.swp$" | wc -l) -eq 1 ]
+	then
+		partFile=$(basename $file | sed 's/\.swp//' | sed 's/\.//')
+
+		echo $partFile
+
+		if [ $(find $1 -type f -printf "%f\n" | egrep "^$partFile$" | wc -l) -eq 0 ]
+		then
+			echo "yes"
+			# mkdir -p $(dirname "$2/$file") 2> /dev/null
+
+			# cp --preserve=all "$1/$file" "$2/$file"
+
+			echo "Removing file $1/$file"
+		fi
+	else
+		# mkdir -p $(dirname "$2/$file") 2> /dev/null
+
+		# cp --preserve=all "$1/$file" "$2/$file"
+
+		echo "Removing file $1/$file"
+	fi
+done
+

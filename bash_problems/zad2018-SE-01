@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if ! [ $# -eq 1 ]
+then
+	echo "Wrong usage of the script! Correct usage: $0 <LOGDIR>"
+	exit 1
+fi
+
+if ! [ -d $1 ]
+then
+	echo "The argument must be the messages' directory!"
+	exit 1
+fi
+
+declare -A messagesCount
+friends=$(find $1 -mindepth 3 -maxdepth 3 -type d -exec basename {} \; | sort -n | uniq)
+allFiles=$(find $1 -mindepth 4 -maxdepth 4 -type f | rev | egrep "^txt\.[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{4}.*$" | rev)
+
+for friend in $friends
+do
+	for file in $allFiles
+	do
+		if [ $(basename $(dirname $file))  = $friend ]
+		then
+			messagesCount[$friend]=$((${messagesCount[$friend]}+$(cat $file | wc -l)))
+		fi
+	done
+done
+
+for el in "${!messagesCount[@]}"
+do
+	toSortArray+=("$el:${messagesCount[$el]}")
+done
+
+echo "${toSortArray[@]}" | tr -s ' ' '\n' | sort -nr -t ':' -k2 

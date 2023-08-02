@@ -1,0 +1,68 @@
+#!/bin/bash
+
+if [ $EUID -eq 0 ]
+then
+	echo "Must be run as root"
+fi
+
+if [ $# -gt 1 ]
+then
+	echo "Wrong usage of the script! Correct use: $0 <config_type> - optional (autoconf/config)"
+	exit 1
+fi
+
+# for each in $CTRLSLOTS we do this
+old_IFS=$IFS
+IFS=$'\n'
+result=$(cat info.txt) # equal to weird command for slot=x
+model=-1
+slot=-1
+array=-1
+disk=-1
+temp=-1
+flag=0
+
+if [ $# -eq 1 ]
+then
+	if [ $1 = "autoconf" ]
+	then
+		echo "yes"
+		exit 1
+	elif [ $1 = "config" ]
+	then
+		echo "graph_title SSA drive temperatures"
+		echo "graph_vlabel Celsius"
+		echo "graph_category sensors"
+		echo "graph_info This graph shows SSA drive temp"
+
+		flag=1
+	fi
+fi
+
+for line in $result
+do
+	offset=$(echo $line | tr -cd '\t' | wc -c)
+	noWhiteLine=$(echo $line | sed "s/\s\+//")
+
+	if [ $offset -eq 0 ]
+	then
+		model=$(echo $line | cut -d' ' -f3)
+		slot=$(echo $line | cut -d' ' -f6)
+	elif [ $offset -eq 1 ]
+	then
+		if [ $(echo $noWhiteLine | egrep ".*Array.*" | wc -l) -eq 1 ]
+		then
+			array=$(echo $noWhiteLine | cut -d' ' -f2)
+		else
+			array="UN"
+		fi
+	elif [ $offset -eq 2 ]
+	then
+		disk=$(echo $noWhiteLine | cut -d' ' -f2)
+	else
+		if [ $(echo $noWhiteLine | egrep "^.*Current Temperature.*$" | wc -l) -eq 1 ]
+		then
+			echo "SSA$slot$model$array$(echo $disk | sed 's/://g').value $(echo $noWhiteLine | cut -d' ' -f4)"
+		fi
+	fi
+done

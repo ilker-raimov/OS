@@ -1,0 +1,8 @@
+#!/bin/bash
+
+velinHomePath="/home/velin"
+minDepth=($(find ${velinHomePath} -type f -printf "%d\n" | sort -n | head -n 1 2>/dev/null))
+lastModFileInode=($(find ${velinHopePath} -type f -printf "%T@ %i\n" | sort -nr -k1 | head -n 1 | cut -d' ' -f2 2>/dev/null))
+
+echo "Wste dylbochini weeee:\n$(find ${velinHomePath} -type f -inum ${lastModFileInode} -printf "%d\n" 2>/dev/null)"
+echo "Min. depth of a file is: $minDepth"

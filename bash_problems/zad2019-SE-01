@@ -1,0 +1,14 @@
+#!/bin/bash
+
+sortedByDist=($(cat planets.txt | tail -n +2 | sort -n -t';' -k3))
+planetType=($(echo ${sortedByDist[-1]} | cut -d';' -f2))
+pattern="^.*\;${planetType}\;.*$"
+matchedArray=()
+
+for element in "${sortedByDist[@]}"; do
+    if echo "$element" | grep -q "$pattern"; then
+        matchedArray+=("$element")
+    fi
+done
+
+echo $(echo ${matchedArray[0]} | awk -F';' '{print $1, $4}')

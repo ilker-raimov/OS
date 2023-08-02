@@ -1,0 +1,73 @@
+#!/bin/bash
+
+if ! [ $# -eq 3 ]
+then
+	echo "Wrong we majka ti sheba i bash script we mamito mu na ws! Correct usage: $0 <number> <prefix symbol> <unit symbol>"
+	exit 1
+fi
+
+numRegex="^[0-9]*\.?[0-9]+$"
+charRegex="^[a-zA-Z]{1}$"
+
+if ! [[ $1 =~ $numRegex ]]
+then
+	echo "First argument must be a number"
+	exit 1
+fi
+
+if ! [[ $2 =~ $charRegex ]]
+then
+	echo "Second argument must be a character"
+	exit 1
+fi
+
+if ! [[ $3 =~ $charRegex ]]
+then
+	echo "Third argument must be a character"
+	exit 1
+fi
+
+base="base.csv"
+prefix="prefix.csv"
+
+declare -A baseColIdx
+declare -A prefixColIdx
+
+firstBaseLine=$(cat $base | head -n +1)
+counter=1
+old_IFS=$IFS
+IFS=$','
+
+for col in ${firstBaseLine[@]}
+do
+	baseColIdx[$col]=$counter
+	
+	counter=$(($counter+1))
+done
+
+counter=1
+
+firstPrefixLine=$(cat $prefix | head -n +1)
+
+for col in ${firstPrefixLine[@]}
+do
+	prefixColIdx[$col]=$counter
+
+	counter=$(($counter+1))
+done
+
+# number  pr symbol  unit symbol
+# number*pr decimal unit symbol (unit measure, unit name)
+
+prSymbol="prefix symbol"
+prDecimal="decimal"
+unSymbol="unit symbol"
+unMeasure="measure"
+unName="unit name"
+
+decimal=$(cat $prefix | egrep "\,?$2\,?" | cut -d',' -f${prefixColIdx[$decimal]})
+measure=$(cat $base | egrep "\,?$3\,?" | cut -d',' -f${baseColIdx[$unMeasure]})
+name=$(cat $base | egrep "\,?$3\,?" | cut -d',' -f${baseColIdx[$unName]})
+
+echo "$decimal $measure $name"
+

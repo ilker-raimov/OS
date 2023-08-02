@@ -1,0 +1,58 @@
+#!/bin/bash
+
+if ! [ $# -eq 0 ]
+then
+	echo "Wrong usage of the script! Correct use: $0 and then enter n lines"
+	exit 1
+fi
+
+old_IFS=$IFS
+IFS=$'\n'
+numRegex="^[\-]?[0-9]*\.?[0-9]+$"
+count=0
+max=-1
+
+declare -A input
+declare -A output
+
+while read -r line
+do
+	if [ -z $line ]
+	then
+		break
+	fi
+
+	input[$count]=$line
+	count=$(($count+1))
+done
+
+for line in ${input[@]}
+do
+	if [ $(echo $line | egrep $numRegex | wc -l) -eq 1 ]
+	then
+		absNum=$(echo $line | egrep -o "[0-9]*\.?[0-9]+$")
+
+		if [ $(echo "$absNum > $max" | bc -l) -eq 1 ]
+		then
+			max=$absNum
+		fi
+	fi
+done
+
+for line in ${input[@]}
+do
+	if [ $(echo $line | egrep $numRegex | wc -l) -eq 1 ]
+	then
+		absNum=$(echo $line | egrep -o "[0-9]*\.?[0-9]+$")
+
+		if [ $(echo "$absNum == $max" | bc -l) -eq 1 ]
+		then
+			output[$line]=0
+		fi
+	fi
+done
+
+for ans in "${!output[@]}"
+do
+	echo $ans
+done

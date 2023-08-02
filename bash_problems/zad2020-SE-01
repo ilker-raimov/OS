@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if ! [ $# -eq 2 ]
+then
+	echo "Wrong usage of the script! Correct usage: $0 <csv file> <directory>"
+	exit1
+fi
+
+if ! [ -e $1 ] || ! [ -f $1 ]
+then
+	echo "First argument must be a regular file that exists!"
+	exit 1
+fi
+
+if ! [ -e $2 ] || ! [ -d $2 ]
+then
+	echo "Second argument must be a directory that exists!"
+	exit 1
+fi
+
+old_IFS=$IFS
+IFS=$'\n'
+foundFiles=$(find $2 -type f -name "*.log" -printf "$(pwd)/%P\n")
+
+for file in ${foundFiles[@]}
+do
+	hostname=$(basename $file ".log")
+	phy=$(cat $file | egrep ".*Maximum Physical Interfaces.*" | cut -d':' -f2 | sed 's/ //g')
+	vlans=$(cat $file | egrep ".*VLANs.*" | cut -d':' -f2 | sed 's/ //g')
+	hosts=$(cat $file | egrep ".*Inside Hosts.*" | cut -d':' -f2 | sed 's/ //g')
+	failover=$(cat $file | egrep ".*Failover.*" | cut -d':' -f2 | sed 's/ //g')
+	vpn_4des_aes=$(cat $file | egrep ".*VPN-3DES-AES.*" | cut -d':' -f2 | sed 's/ //g')
+	peers=$(cat $file | egrep ".*Total VPN Peers.*" | cut -d':' -f2 | sed 's/ //g')
+	vlan_trunk_ports=$(cat $file | egrep ".*VLAN Trunk Ports" | cut -d':' -f2 | sed 's/ //g')
+	licenseUseless1=$(cat $file | egrep ".*This platform has.*" | egrep -o "^.*This platform has a[n]? ")
+	licenseUseless2=$(cat $file | egrep " license\.$" | egrep -o " license\.$")
+	license=$(cat $file | egrep ".*This platform has.*" | sed "s/$licenseUseless1//g" | sed "s/$licenseUseless2//g")
+	sn=$(cat $file | egrep ".*Serial Number.*" | cut -d':' -f2 | sed 's/ //g')
+	key=$(cat $file | egrep "Running Activation Key.*" | cut -d':' -f2 | sed 's/ //g')
+
+	echo "$hostname,$phy,$vlans,$hosts,$failover,$vpn_4des_aes,$peers,$vlan_trunk_ports,$license,$sn,$key"
+done
+

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if ! [ $# -eq 3 ]
+then
+	echo "Wrong usage of the script. Proper usage: $0 <sourceDir> <DestinationDir> <filenameSubstring>"
+	exit 1
+fi
+
+if ! [ -d $1 ]
+then
+	echo "First argument must be a non-empty directory"
+	exit 1
+fi
+
+if ! [ -d $2 ]
+then
+	echo "Second argument must be a directory"
+	exit 1
+fi
+
+if ! [ $(find $2 -type f | wc -l) -eq 0 ]
+then
+	echo "Second argument must be an empty directory"
+	exit
+fi
+
+filesPaths=$(find $1 -type f -name "*$3*" -printf "%P\n")
+
+for el in ${filesPaths}
+do
+	if [ $(echo $el | egrep ".*/.*" | wc -l) -eq 1 ]
+	then
+		relPath=$(echo $el | rev | sed 's/^[^\/]*\///' | rev)
+	else
+		relPath=""
+	fi
+	
+	mkdir -p "$2/$relPath" 2> /dev/null
+	cp --no-preserve=all "$1/$el" "$2/$el"
+done

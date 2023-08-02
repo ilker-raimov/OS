@@ -1,0 +1,62 @@
+#!/bin/bash
+
+if ! [ $# -eq 3 ]
+then
+	echo "Wrong use of script. Correct use: $0 <filename> <key1> <key2>"
+	exit1
+fi
+
+fullFilePath="$(pwd)/$1"
+
+if ! [ -e $fullFilePath ]
+then
+	echo "File does not exist!"
+	exit 1
+fi
+
+firstLine=$(cat $fullFilePath | egrep "$2=")
+secondLine=$(cat $fullFilePath | egrep "$3=")
+
+if [ -z "$firstLine" ]
+then
+	echo "Line with key $2 does not exist in file $1"
+	exit 1
+fi
+
+if [ -z "$secondLine" ]
+then
+	echo "Line with key $3 does not exist in file $1"
+	exit 1
+fi
+
+firstLineValues=$(echo $firstLine | cut -d'=' -f2)
+firstLineValuesArray=$()
+
+secondLineValues=$(echo $secondLine | cut -d'=' -f2)
+secondLineValuesArray=()
+secondLineNewValuesArray=()
+
+IFS=' '
+
+read -ra firstLineValuesArray <<< "$firstLineValues"
+read -ra secondLineValuesArray <<< "$secondLineValues"
+
+
+for slv in "${secondLineValuesArray[@]}"
+do
+	flag=0
+
+	for flv in "${firstLineValuesArray[@]}"
+	do
+		if [ "$slv" = "$flv" ]
+		then
+			flag=1
+			break
+		fi
+	done
+
+	if [ $flag -eq 0 ]
+	then
+		echo $slv
+	fi
+done

@@ -1,0 +1,77 @@
+#!/bin/bash
+
+if ! [ $# -eq 0 ]
+then
+	echo "Wrong usage of the script! Correct use: $0 and then enter n lines"
+	exit 1
+fi
+
+old_IFS=$IFS
+IFS=$'\n'
+numRegex="^[\-]?[0-9]*\.?[0-9]+$"
+count=0
+max=0
+min=1000000000
+
+declare -A input
+declare -A output
+
+while read -r line
+do
+	if [ -z $line ]
+	then
+		break
+	fi
+
+	input[$count]=$line
+	count=$(($count+1))
+done
+
+for line in ${input[@]}
+do
+	if [ $(echo $line | egrep $numRegex | wc -l) -eq 1 ]
+	then
+		sum=0
+		absNum=$(echo $line | egrep -o "[0-9]*\.?[0-9]+$")
+		tempNum=$absNum
+
+		while [ $tempNum -gt 0 ]
+		do
+			mod=$(($tempNum%10))
+			sum=$(($sum+$mod))
+			tempNum=$(($tempNum/10))
+		done
+
+		if [ $(echo "$sum > $max" | bc -l) -eq 1 ]
+		then
+			max=$sum
+		fi
+	fi
+done
+
+for line in ${input[@]}
+do
+	if [ $(echo $line | egrep $numRegex | wc -l) -eq 1 ]
+	then
+		sum=0
+		absNum=$(echo $line | egrep -o "[0-9]*\.?[0-9]+$")
+		tempNum=$absNum
+
+		while [ $tempNum -gt 0 ]
+		do
+			mod=$(($tempNum%10))
+			sum=$(($sum+$mod))
+			tempNum=$(($tempNum/10))
+		done
+
+		if [ $(echo "$sum == $max" | bc -l) -eq 1 ]
+		then
+			if [ $(echo "$line < $min" | bc -l) -eq 1 ]
+			then
+				min=$line
+			fi
+		fi
+	fi	
+done
+
+echo $min
